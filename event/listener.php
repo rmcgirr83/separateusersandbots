@@ -72,7 +72,8 @@ class listener implements EventSubscriberInterface
 
 		//variables we'll need later in the script
 		$this->display_online_list = false;
-		// maybe we'll work on forum lists at a later date
+		//maybe we'll work on forum lists at a later date
+		//need events in viewforum.html
 		$this->item_id = 0;
 		$this->item = '';
 	}
@@ -86,10 +87,10 @@ class listener implements EventSubscriberInterface
 	*/
 	static public function getSubscribedEvents()
 	{
-		return array(
+		return [
 			'core.page_header'			=> 'page_header',
 			'core.page_header_after'	=> 'display_bots',
-		);
+		];
 	}
 
 	/**
@@ -101,7 +102,7 @@ class listener implements EventSubscriberInterface
 	*/
 	public function display_bots ($event)
 	{
-		// we'll just run with the code that was already in index.php, mostly
+		// we'll just run with the code that is already in core, mostly
 		// only do this for the index page $this->item
 		if ($this->config['load_online'] && $this->config['load_online_time'] && $this->display_online_list && $this->item_id === 0)
 		{
@@ -118,7 +119,7 @@ class listener implements EventSubscriberInterface
 			{
 				$bot_user_ids_keys = array_keys($bot_user_ids);
 			}
-			$bot_online_link = array();
+			$bot_online_link = [];
 			$bot_count = 0;
 			if (isset($bot_user_ids_keys))
 			{
@@ -151,16 +152,16 @@ class listener implements EventSubscriberInterface
 			$visible_online = $this->language->lang('REG_USERS_TOTAL', (int) $online_users['visible_online']);
 			$hidden_online = $this->language->lang('HIDDEN_USERS_TOTAL', (int) $online_users['hidden_online']);
 
-			$bot_online = $this->language->lang('ONLINE_BOT_COUNT', (int) $bot_count);
+			$bots_online = $this->language->lang('ONLINE_BOT_COUNT', (int) $bot_count);
 
 			if ($this->config['load_online_guests'])
 			{
 				$guests_online = $this->language->lang('GUEST_USERS_TOTAL', (int) $online_users['guests_online']);
-				$l_online_users = $this->language->lang('SUB_ONLINE_USERS_TOTAL_GUESTS', (int) $online_users['total_online'], $visible_online, $bot_online, $hidden_online, $guests_online);
+				$l_online_users = $this->language->lang('SUB_ONLINE_USERS_TOTAL_GUESTS', (int) $online_users['total_online'], $visible_online, $bots_online, $hidden_online, $guests_online);
 			}
 			else
 			{
-				$l_online_users = $this->language->lang('ONLINE_USERS_TOTAL', (int) $online_users['total_online'], $visible_online, $bot_online, $hidden_online);
+				$l_online_users = $this->language->lang('SUB_ONLINE_USERS_TOTAL', (int) $online_users['total_online'], $visible_online, $bots_online, $hidden_online);
 			}
 
 			$online_userlist = $user_online_strings['online_userlist'];
@@ -176,16 +177,17 @@ class listener implements EventSubscriberInterface
 
 			$l_online_time = $this->language->lang('VIEW_ONLINE_TIMES', (int) $this->config['load_online_time']);
 
-			$this->template->assign_vars(array(
-				'TOTAL_USERS_ONLINE'	=> $l_online_users,
-				'LOGGED_IN_USER_LIST'	=> $online_userlist,
-				'LOGGED_IN_BOT_LIST'	=> $online_botlist,
-				'L_ONLINE_EXPLAIN'		=> $l_online_time,
-				'RECORD_USERS'			=> $l_online_record,
+			$this->template->assign_vars(
+				[
+					'TOTAL_USERS_ONLINE'	=> $l_online_users,
+					'LOGGED_IN_USER_LIST'	=> $online_userlist,
+					'LOGGED_IN_BOT_LIST'	=> $online_botlist,
+					'L_ONLINE_EXPLAIN'		=> $l_online_time,
+					'RECORD_USERS'			=> $l_online_record,
 
-				'S_DISPLAY_SEPARATEUSERSANDBOTS' => true,
-				'S_DISPLAY_ONLINE_LIST' => false,
-			));
+					'S_DISPLAY_SEPARATEUSERSANDBOTS' => true,
+					'S_DISPLAY_ONLINE_LIST' => false,]
+			);
 		}
 	}
 
@@ -228,10 +230,10 @@ class listener implements EventSubscriberInterface
 			WHERE user_type = ' . USER_IGNORE . ' AND user_id <> ' . ANONYMOUS;
 		$result = $this->db->sql_query($sql);
 
-		$bot_user_ids = array();
+		$bot_user_ids = [];
 		while ($row = $this->db->sql_fetchrow($result))
 		{
-			$bot_user_ids[$row['user_id']] = array('user_id' => $row['user_id'], 'username' => $row['username'], 'user_colour' => $row['user_colour']);
+			$bot_user_ids[$row['user_id']] = ['user_id' => $row['user_id'], 'username' => $row['username'], 'user_colour' => $row['user_colour']];
 		}
 		$this->db->sql_freeresult($result);
 

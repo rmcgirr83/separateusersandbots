@@ -37,6 +37,11 @@ $lang = array_merge($lang, array(
 		1	=> '%d bot',
 		2	=> '%d bots',
 	),
+	// "... :: w registered, x bots and y hidden"
+	'SUB_ONLINE_USERS_TOTAL'		=> array(
+		1	=> 'In total there is <strong>%1$d</strong> user online :: %2$s, $3%s and %4$s',
+		2	=> 'In total there are <strong>%1$d</strong> users online :: %2$s, $3%s and %4$s',
+	),
 	// "... :: w registered, x bots, y hidden and z guests"
 	'SUB_ONLINE_USERS_TOTAL_GUESTS'	=> array(
 		1	=> 'In total there is <strong>%1$d</strong> user online :: %2$s, %3$s, %4$s and %5$s',
