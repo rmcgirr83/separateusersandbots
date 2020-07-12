@@ -13,6 +13,13 @@ namespace rmcgirr83\separateusersandbots\event;
 /**
 * @ignore
 */
+use phpbb\auth\auth;
+use phpbb\config\config;
+use phpbb\db\driver\driver_interface;
+use phpbb\language\language;
+use phpbb\template\template;
+use phpbb\user;
+
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -46,7 +53,7 @@ class listener implements EventSubscriberInterface
 	*
 	* @param \phpbb\auth\auth					$auth			Auth object
 	* @param \phpbb\config\config               $config         Config object
-	* @param \phpbb\db\driver\driver			$db				Database object
+	* @param \phpbb\db\driver\driver_interface	$db				Database object
 	* @param \phpbb\language\language			$language		Language object
 	* @param \phpbb\template\template           $template       Template object
 	* @param \phpbb\user                        $user           User object
