@@ -15,8 +15,8 @@ namespace rmcgirr83\separateusersandbots;
 */
 class ext extends \phpbb\extension\base
 {
-	/** @var string Require phpBB 3.2.0 due to the use of FontAwesome */
-	const PHPBB_MIN_VERSION = '3.2.0';	
+	/** @var string Require phpBB 3.2.0 */
+	const PHPBB_MIN_VERSION = '3.2.0';
 	/**
 	 * Enable extension if phpBB version requirement is met
 	 *
@@ -26,7 +26,7 @@ class ext extends \phpbb\extension\base
 	public function is_enableable()
 	{
 		$config = $this->container->get('config');
-		
+
 		$enableable = (phpbb_version_compare($config['version'], self::PHPBB_MIN_VERSION, '>='));
 		if (!$enableable)
 		{

@@ -3,10 +3,8 @@ services:
         class: rmcgirr83\separateusersandbots\event\listener
         arguments:
             - '@auth'
-            - '@cache'
             - '@config'
             - '@dbal.conn'
-            - '@dispatcher'
             - '@language'
             - '@template'
             - '@user'
