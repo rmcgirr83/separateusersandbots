@@ -4,10 +4,8 @@ services:
         arguments:
             - '@auth'
             - '@config'
-            - '@dbal.conn'
             - '@language'
             - '@template'
-            - '@user'
             - '@?rmcgirr83.hidebots.listener'
         tags:
             - { name: event.listener }

@@ -15,10 +15,8 @@ namespace rmcgirr83\separateusersandbots\event;
 */
 use phpbb\auth\auth;
 use phpbb\config\config;
-use phpbb\db\driver\driver_interface;
 use phpbb\language\language;
 use phpbb\template\template;
-use phpbb\user;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -33,17 +31,11 @@ class listener implements EventSubscriberInterface
 	/** @var \phpbb\config\config */
 	protected $config;
 
-	/** @var \phpbb\db\driver\driver */
-	protected $db;
-
 	/** @var \phpbb\language\language */
 	protected $language;
 
 	/** @var \phpbb\template\template */
 	protected $template;
-
-	/** @var \phpbb\user */
-	protected $user;
 
 	/** @var \rmcgirr83\hidebots\event\listener */
 	private $hidebots;
@@ -53,36 +45,26 @@ class listener implements EventSubscriberInterface
 	*
 	* @param \phpbb\auth\auth					$auth			Auth object
 	* @param \phpbb\config\config               $config         Config object
-	* @param \phpbb\db\driver\driver_interface	$db				Database object
 	* @param \phpbb\language\language			$language		Language object
 	* @param \phpbb\template\template           $template       Template object
-	* @param \phpbb\user                        $user           User object
 	* @param \rmcgirr83\hidebots\event\listener	$hidebots
 	* @access public
 	*/
 	public function __construct(
 		\phpbb\auth\auth $auth,
 		\phpbb\config\config $config,
-		\phpbb\db\driver\driver_interface $db,
 		\phpbb\language\language $language,
 		\phpbb\template\template $template,
-		\phpbb\user $user,
 		\rmcgirr83\hidebots\event\listener $hidebots = null)
 	{
 		$this->auth = $auth;
 		$this->config = $config;
-		$this->db = $db;
 		$this->language = $language;
 		$this->template = $template;
-		$this->user = $user;
 		$this->hidebots = $hidebots;
 
-		//variables we'll need later in the script
-		$this->display_online_list = false;
-		//maybe we'll work on forum lists at a later date
-		//need events in viewforum.html
-		$this->item_id = 0;
-		$this->item = '';
+		//variable we'll need later in the script
+		$this->bots_online = '';
 	}
 
 	/**
@@ -95,8 +77,9 @@ class listener implements EventSubscriberInterface
 	static public function getSubscribedEvents()
 	{
 		return [
-			'core.page_header'			=> 'page_header',
-			'core.page_header_after'	=> 'display_bots',
+			'core.page_header_after'						=>	'page_header_after',
+			'core.obtain_users_online_string_before_modify'	=>	'obtain_users_online_string_before_modify',
+			'core.obtain_users_online_string_modify'		=>	'obtain_users_online_string_modify',
 		];
 	}
 
@@ -107,42 +90,37 @@ class listener implements EventSubscriberInterface
 	* @return void
 	* @access public
 	*/
-	public function display_bots ($event)
+	public function obtain_users_online_string_before_modify ($event)
 	{
-		// we'll just run with the code that is already in core, mostly
-		// only do this for the index page $this->item
-		if ($this->config['load_online'] && $this->config['load_online_time'] && $this->display_online_list && $this->item_id === 0)
+		if (!$this->adjust_whois_online($event['item_id']))
 		{
+			return;
+		}
+
 			$this->language->add_lang('common', 'rmcgirr83/separateusersandbots');
 
-			$l_online_users = $online_userlist = $online_botlist = '';
+		$online_users = $event['online_users'];
+		$user_online_link = $event['user_online_link'];
+		$rowset = $event['rowset'];
 
-			$online_users = obtain_users_online($this->item_id, $this->item);
-
-			$bot_user_ids = $this->get_bot_users();
-
-			//a nub admin may have removed all bots so ensure we have an array with data
-			if (count($bot_user_ids))
-			{
-				$bot_user_ids_keys = array_keys($bot_user_ids);
-			}
 			$bot_online_link = [];
 			$bot_count = 0;
-			if (isset($bot_user_ids_keys))
+		foreach ($rowset as $row)
 			{
-				foreach ($online_users['online_users'] as $key => $value)
-				{
-					if (in_array($key, $bot_user_ids_keys))
+			if ($row['user_type'] == USER_IGNORE && $row['user_id'] != ANONYMOUS)
 					{
 						++$bot_count;
-						$bot_online_link[$bot_user_ids[$key]['username']] = get_username_string('no_profile', $bot_user_ids[$key]['user_id'], $bot_user_ids[$key]['username'], $bot_user_ids[$key]['user_colour']);
-						unset($online_users['online_users'][$key]);
-						$online_users['visible_online']--;
-					}
+				$bot_online_link[$row['username']] = $user_online_link[$row['user_id']];
+
+				//adjust the event entries
+				--$online_users['visible_online'];
+				unset($user_online_link[$row['user_id']]);
 				}
 			}
 
-			// sort the bots by key name
+		$online_botlist = '';
+
+		// sort the bots by name
 			ksort($bot_online_link);
 			$online_botlist = implode(', ', $bot_online_link);
 
@@ -153,97 +131,87 @@ class listener implements EventSubscriberInterface
 
 			$online_botlist = $this->language->lang('BOTS_ONLINE') . ' ' . $online_botlist;
 
-			$user_online_strings = obtain_users_online_string($online_users, $this->item_id);
+		$this->bots_online = $this->language->lang('ONLINE_BOT_COUNT', (int) $bot_count);
 
-			// Build online listing
+		$this->template->assign_vars(
+			[
+				'LOGGED_IN_BOT_LIST'	=> $online_botlist,]
+		);
+
+		$event['online_users'] = $online_users;
+		$event['user_online_link'] = $user_online_link;
+	}
+
+	/**
+	* Change language string
+	*
+	* @param object $event The event object
+	* @return void
+	* @access public
+	*/
+	public function obtain_users_online_string_modify ($event)
+	{
+		if (!$this->adjust_whois_online($event['item_id']))
+		{
+			return;
+		}
+
+		$l_online_users = $event['l_online_users'];
+		$online_users = $event['online_users'];
+
 			$visible_online = $this->language->lang('REG_USERS_TOTAL', (int) $online_users['visible_online']);
 			$hidden_online = $this->language->lang('HIDDEN_USERS_TOTAL', (int) $online_users['hidden_online']);
-
-			$bots_online = $this->language->lang('ONLINE_BOT_COUNT', (int) $bot_count);
 
 			if ($this->config['load_online_guests'])
 			{
 				$guests_online = $this->language->lang('GUEST_USERS_TOTAL', (int) $online_users['guests_online']);
-				$l_online_users = $this->language->lang('SUB_ONLINE_USERS_TOTAL_GUESTS', (int) $online_users['total_online'], $visible_online, $bots_online, $hidden_online, $guests_online);
+			$l_online_users = $this->language->lang('SUB_ONLINE_USERS_TOTAL_GUESTS', (int) $online_users['total_online'], $visible_online, $this->bots_online, $hidden_online, $guests_online);
 			}
 			else
 			{
-				$l_online_users = $this->language->lang('SUB_ONLINE_USERS_TOTAL', (int) $online_users['total_online'], $visible_online, $bots_online, $hidden_online);
+			$l_online_users = $this->language->lang('SUB_ONLINE_USERS_TOTAL', (int) $online_users['total_online'], $visible_online, $this->bots_online, $hidden_online);
 			}
 
-			$online_userlist = $user_online_strings['online_userlist'];
-			$total_online_users = $online_users['total_online'];
-
-			if ($total_online_users > $this->config['record_online_users'])
-			{
-				$this->config->set('record_online_users', $total_online_users, false);
-				$this->config->set('record_online_date', time(), false);
-			}
-
-			$l_online_record = $this->language->lang('RECORD_ONLINE_USERS', (int) $this->config['record_online_users'], $this->user->format_date($this->config['record_online_date'], false, true));
-
-			$l_online_time = $this->language->lang('VIEW_ONLINE_TIMES', (int) $this->config['load_online_time']);
-
-			$this->template->assign_vars(
-				[
-					'TOTAL_USERS_ONLINE'	=> $l_online_users,
-					'LOGGED_IN_USER_LIST'	=> $online_userlist,
-					'LOGGED_IN_BOT_LIST'	=> $online_botlist,
-					'L_ONLINE_EXPLAIN'		=> $l_online_time,
-					'RECORD_USERS'			=> $l_online_record,
-
-					'S_DISPLAY_SEPARATEUSERSANDBOTS' => true,
-					'S_DISPLAY_ONLINE_LIST' => false,]
-			);
-		}
+		$event['l_online_users'] = $l_online_users;
 	}
 
 	/**
-	* retrieve display_online_list, item_id and item
+	* Adjust template vars
 	*
 	* @param object 	$event 	The event object
 	* @return void
 	* @access public
 	*/
-	public function page_header ($event)
+	public function page_header_after ($event)
 	{
-		//only run this on the index page
-		if ($event['display_online_list'] == true && $event['item_id'] === 0)
+		if (!$this->adjust_whois_online($event['item_id']))
 		{
-			// if the hide bots extension is installed then do nothing as they won't show anyway
-			$hidebots = (!$this->auth->acl_get('a_') && $this->hidebots !== null) ? true : false;
-			if (!$hidebots)
-			{
-				$this->display_online_list = $event['display_online_list'];
-				$this->item_id = $event['item_id'];
-				$this->item = $event['item'];
-
-				//set display_online_list to false, this reduces queries and peak memory usage
-				$event['display_online_list'] = false;
-			}
+			return;
 		}
+
+		$this->template->assign_vars(
+			[
+				'S_DISPLAY_SEPARATEUSERSANDBOTS' => true,
+				'S_DISPLAY_ONLINE_LIST' => false,]
+		);
 	}
 
 	/**
-	* create an array of bots and their needed data
+	* should we adjust the who is online stats
 	*
-	* @return array
-	* @access public
+	* @param	int		item_id		event item_id
+	* @return	bool
+	* @access	private
 	*/
-	private function get_bot_users()
+	private function adjust_whois_online($item_id = 0)
 	{
-		$sql = 'SELECT user_id, username, user_colour
-			FROM ' . USERS_TABLE . '
-			WHERE user_type = ' . USER_IGNORE . ' AND user_id <> ' . ANONYMOUS;
-		$result = $this->db->sql_query($sql);
-
-		$bot_user_ids = [];
-		while ($row = $this->db->sql_fetchrow($result))
+		//if the hide bots extension is installed or we aren't on the index page, do nothing
+		$hidebots = (!$this->auth->acl_get('a_') && $this->hidebots !== null) ? true : false;
+		if ($hidebots || $item_id != 0)
 		{
-			$bot_user_ids[$row['user_id']] = ['user_id' => $row['user_id'], 'username' => $row['username'], 'user_colour' => $row['user_colour']];
+			return false;
 		}
-		$this->db->sql_freeresult($result);
 
-		return $bot_user_ids;
+		return true;
 	}
 }

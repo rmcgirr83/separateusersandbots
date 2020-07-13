@@ -2,8 +2,8 @@
     "name": "rmcgirr83/separateusersandbots",
     "type": "phpbb-extension",
     "description": "Extension seperates bots from the users list on the index page of a phpBB forum.",
-    "version": "1.0.0",
-    "time": "2020-07-11",
+    "version": "1.1.0",
+    "time": "2020-07-13",
     "keywords": [
         "phpbb",
         "extension",
