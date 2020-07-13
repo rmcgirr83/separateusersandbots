@@ -40,6 +40,9 @@ class listener implements EventSubscriberInterface
 	/** @var \rmcgirr83\hidebots\event\listener */
 	private $hidebots;
 
+	/** @var string bots online */
+	protected $bots_online;
+
 	/**
 	* Constructor
 	*
@@ -51,10 +54,10 @@ class listener implements EventSubscriberInterface
 	* @access public
 	*/
 	public function __construct(
-		\phpbb\auth\auth $auth,
-		\phpbb\config\config $config,
-		\phpbb\language\language $language,
-		\phpbb\template\template $template,
+		auth $auth,
+		config $config,
+		language $language,
+		template $template,
 		\rmcgirr83\hidebots\event\listener $hidebots = null)
 	{
 		$this->auth = $auth;
@@ -62,9 +65,6 @@ class listener implements EventSubscriberInterface
 		$this->language = $language;
 		$this->template = $template;
 		$this->hidebots = $hidebots;
-
-		//variable we'll need later in the script
-		$this->bots_online = '';
 	}
 
 	/**
@@ -97,39 +97,39 @@ class listener implements EventSubscriberInterface
 			return;
 		}
 
-			$this->language->add_lang('common', 'rmcgirr83/separateusersandbots');
+		$this->language->add_lang('common', 'rmcgirr83/separateusersandbots');
 
 		$online_users = $event['online_users'];
 		$user_online_link = $event['user_online_link'];
 		$rowset = $event['rowset'];
 
-			$bot_online_link = [];
-			$bot_count = 0;
+		$bot_online_link = [];
+		$bot_count = 0;
 		foreach ($rowset as $row)
-			{
+		{
 			if ($row['user_type'] == USER_IGNORE && $row['user_id'] != ANONYMOUS)
-					{
-						++$bot_count;
+			{
+				++$bot_count;
 				$bot_online_link[$row['username']] = $user_online_link[$row['user_id']];
 
 				//adjust the event entries
 				--$online_users['visible_online'];
 				unset($user_online_link[$row['user_id']]);
-				}
 			}
+		}
 
 		$online_botlist = '';
 
 		// sort the bots by name
-			ksort($bot_online_link);
-			$online_botlist = implode(', ', $bot_online_link);
+		ksort($bot_online_link);
+		$online_botlist = implode(', ', $bot_online_link);
 
-			if (!$online_botlist)
-			{
-				$online_botlist = $this->language->lang('NO_ONLINE_BOTS');
-			}
+		if (!$online_botlist)
+		{
+			$online_botlist = $this->language->lang('NO_ONLINE_BOTS');
+		}
 
-			$online_botlist = $this->language->lang('BOTS_ONLINE') . ' ' . $online_botlist;
+		$online_botlist = $this->language->lang('BOTS_ONLINE') . ' ' . $online_botlist;
 
 		$this->bots_online = $this->language->lang('ONLINE_BOT_COUNT', (int) $bot_count);
 
@@ -159,18 +159,18 @@ class listener implements EventSubscriberInterface
 		$l_online_users = $event['l_online_users'];
 		$online_users = $event['online_users'];
 
-			$visible_online = $this->language->lang('REG_USERS_TOTAL', (int) $online_users['visible_online']);
-			$hidden_online = $this->language->lang('HIDDEN_USERS_TOTAL', (int) $online_users['hidden_online']);
+		$visible_online = $this->language->lang('REG_USERS_TOTAL', (int) $online_users['visible_online']);
+		$hidden_online = $this->language->lang('HIDDEN_USERS_TOTAL', (int) $online_users['hidden_online']);
 
-			if ($this->config['load_online_guests'])
-			{
-				$guests_online = $this->language->lang('GUEST_USERS_TOTAL', (int) $online_users['guests_online']);
+		if ($this->config['load_online_guests'])
+		{
+			$guests_online = $this->language->lang('GUEST_USERS_TOTAL', (int) $online_users['guests_online']);
 			$l_online_users = $this->language->lang('SUB_ONLINE_USERS_TOTAL_GUESTS', (int) $online_users['total_online'], $visible_online, $this->bots_online, $hidden_online, $guests_online);
-			}
-			else
-			{
+		}
+		else
+		{
 			$l_online_users = $this->language->lang('SUB_ONLINE_USERS_TOTAL', (int) $online_users['total_online'], $visible_online, $this->bots_online, $hidden_online);
-			}
+		}
 
 		$event['l_online_users'] = $l_online_users;
 	}
