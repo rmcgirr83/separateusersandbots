@@ -30,9 +30,9 @@ class ext extends \phpbb\extension\base
 		$enableable = (phpbb_version_compare($config['version'], self::PHPBB_MIN_VERSION, '>='));
 		if (!$enableable)
 		{
-			$user = $this->container->get('user');
-			$user->add_lang_ext('rmcgirr83/separateusersandbots', 'common');
-			trigger_error($user->lang('EXTENSION_REQUIRES_32'), E_USER_WARNING);
+			$language = $this->container->get('language');
+			$language->add_lang('common', 'rmcgirr83/separateusersandbots');
+			trigger_error($language->lang('EXTENSION_REQUIRES_32'), E_USER_WARNING);
 		}
 
 		return $enableable;
