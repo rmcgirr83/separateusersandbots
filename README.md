@@ -1,7 +1,9 @@
-Separate users and bots
-===============
+# Separate users and bots
+
 
 Extension seperates bots from the users list on the index page of a phpBB forum.  Compatible with the hide bots extension.  Requires at least phpBB version 3.2.
+
+[![Build Status](https://github.com/rmcgirr83/separateusersandbots/workflows/Tests/badge.svg)](https://github.com/rmcgirr83/separateusersandbots/actions)
 
 ## Installation
 
