@@ -25,19 +25,19 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 */
 class listener implements EventSubscriberInterface
 {
-	/** @var \phpbb\auth\auth */
+	/** @var auth $auth */
 	protected $auth;
 
-	/** @var \phpbb\config\config */
+	/** @var config $config */
 	protected $config;
 
-	/** @var \phpbb\language\language */
+	/** @var language $language */
 	protected $language;
 
-	/** @var \phpbb\template\template */
+	/** @var template $template */
 	protected $template;
 
-	/** @var \rmcgirr83\hidebots\event\listener */
+	/** @var hidebots $hidebots */
 	private $hidebots;
 
 	/** @var string bots online */
@@ -46,11 +46,11 @@ class listener implements EventSubscriberInterface
 	/**
 	* Constructor
 	*
-	* @param \phpbb\auth\auth					$auth			Auth object
-	* @param \phpbb\config\config               $config         Config object
-	* @param \phpbb\language\language			$language		Language object
-	* @param \phpbb\template\template           $template       Template object
-	* @param \rmcgirr83\hidebots\event\listener	$hidebots
+	* @param auth				$auth			Auth object
+	* @param config             $config         Config object
+	* @param language			$language		Language object
+	* @param template           $template       Template object
+	* @param hidebots			$hidebots
 	* @access public
 	*/
 	public function __construct(
@@ -58,7 +58,7 @@ class listener implements EventSubscriberInterface
 		config $config,
 		language $language,
 		template $template,
-		\rmcgirr83\hidebots\event\listener $hidebots = null)
+		hidebots $hidebots = null)
 	{
 		$this->auth 	= $auth;
 		$this->config 	= $config;
