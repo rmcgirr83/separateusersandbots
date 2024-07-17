@@ -25,19 +25,19 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 */
 class listener implements EventSubscriberInterface
 {
-	/** @var auth $auth */
+	/** @var $auth */
 	protected $auth;
 
-	/** @var config $config */
+	/** @var $config */
 	protected $config;
 
-	/** @var language $language */
+	/** @var $language */
 	protected $language;
 
-	/** @var template $template */
+	/** @var $template */
 	protected $template;
 
-	/** @var hidebots $hidebots */
+	/** @var $hidebots */
 	private $hidebots;
 
 	/** @var string bots online */

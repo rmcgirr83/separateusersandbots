@@ -16,7 +16,7 @@ namespace rmcgirr83\separateusersandbots;
 class ext extends \phpbb\extension\base
 {
 	/** @var string Require phpBB 3.2.0 */
-	const PHPBB_MIN_VERSION = '3.2.0';
+	const PHPBB_MIN_VERSION = '3.3';
 	/**
 	 * Enable extension if phpBB version requirement is met
 	 *
